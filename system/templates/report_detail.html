@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}管理系统{% endblock %}
+{% block content %}
+<div class="jumbotron">
+<h3> {{report.end_time.isoformat}}报告结果：</h3>
+  <p>订单总量 : {{report.totle_order}}</p>
+  <p>订单总额 : {{report.totle_amount}}</p>
+   <p>窗饰订单量 : {{report.tab_category.tracery}}</p>
+   <p>
+   {% for order in report.tab_tracery %}
+    {{order.city}} ({{order.totle_order}}) |
+   {%endfor%}
+   </p>
+   <p>卫浴订单量 : {{report.tab_category.bathroom}}</p>
+   <p>
+   {% for order in report.tab_tracery %}
+    {{order.city}} ({{order.totle_order}}) |
+   {%endfor%}
+   </p>
+   <p>晾衣架订单量 : {{report.tab_category.clotheshorse}}</p>
+   <p>
+   {% for order in report.tab_tracery %}
+    {{order.city}} ({{order.totle_order}}) |
+   {%endfor%}
+   </p>
+   <p>门窗订单量 : {{report.tab_category.doorsandwindows}}</p>
+   <p>
+   {% for order in report.tab_tracery %}
+    {{order.city}} ({{order.totle_order}}) |
+   {%endfor%}
+   </p>
+   <hr>
+   
+  </div>
+{% endblock %}

@@ -2,6 +2,14 @@
 {% block title %}管理系统{% endblock %}
 {% block content %}
 <div class="jumbotron">
-to do
+{% if reports %}
+      <form role="from" method="get" class="form-horizontal" action="/report"  >
+       <input type="submit" value="搜索" class="btn btn-primary"/>
+       <input type="date" name="date" placeholder="日期" />
+      </form>
+  {% for report in reports %}
+        <p><a href="{% url 'report_detail' report.id %}">{{report.name}}</a>  | {{report.begin_time.isoformat}}:{{report.end_time.isoformat}}</p>
+  {% endfor %}
+  {%endif%}
 </div>
 {% endblock %}

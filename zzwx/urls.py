@@ -21,4 +21,5 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', views.home, name='home'),
     url(r'^report/$', views.report, name='report'),
+    url(r'^report_detail/(?P<report_id>\d)$', views.report_detail, name='report_detail'),
 ]

@@ -13,5 +13,6 @@ class Report(models.Model):
         ('Y', u'年报告'),
     )
     name = models.CharField(u"报告", max_length = 60)
-    sql_commend = models.CharField(u"SQL", max_length = 400)
+    begin_time = models.DateField()
+    end_time = models.DateField()
     report_type = models.CharField(max_length = 1, choices = R_TYPE)
