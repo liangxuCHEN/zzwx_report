@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}管理系统{% endblock %}
+{% block content %}
+<div class="jumbotron">
+<h1>欢迎来到这里</h1>
+<p>这是一个数据分析后台，这里可以看到一些数据分析的小程序，帮助大家提高处理数据的效率</p>
+</div>
+<div class="row">
+  <div class="col-sm-6 col-md-3" >
+    <div class="thumbnail">
+      <div class="caption">
+        <h3>报告</h3>
+        <p><a href="{% url 'report' %}" class="btn btn-primary">周报管理</a></p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block footer %}
+&copy; Copyright 2016 by zzwx</a>
+{% endblock %}
