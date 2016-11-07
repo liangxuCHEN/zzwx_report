@@ -4,6 +4,10 @@
 <div class="jumbotron">
 <h3> {{report.end_time.isoformat}}报告结果：</h3>
   <p>订单总量 : {{report.totle_order}}</p>
+  <p>取消订单总量 : {{report.totle_order_cancel}}</p>
+  <p> 待接单等待时间 : {% for item in report.wait_day %} {{item.day}}天 ({{item.count}}) | {%endfor%}</p>
+  <p> 签到时间与预约时间差 : {% for item in report.sign_rdv %} {{item.day}}天 ({{item.count}}) | {%endfor%}</p>
+  <p> 签到时间和完工时间差 : {% for item in report.fini_sign %} {{item.day}}天 ({{item.count}}) | {%endfor%}</p>
   <p>订单总额 : {{report.totle_amount}}</p>
    <p>窗饰订单量 : {{report.tab_category.tracery}}</p>
    <p>
@@ -30,6 +34,8 @@
    {%endfor%}
    </p>
    <hr>
-   
+   <p>新增用户 : {{report.new_user}} (个人 : {{report.tab_user_role.person}} |商户:{{report.tab_user_role.merchant}} |电商:{{report.tab_user_role.eshop}} |师傅:{{report.tab_user_role.worker}})</p>
+
+   <p>新增用户来源 <br/>微信朋友: {{report.tab_user_source.wechatFriend}} |QQ朋友:{{report.tab_user_source.qqFriend}} |微信朋友圈:{{report.tab_user_source.wechatCircle}}</p>
   </div>
 {% endblock %}
