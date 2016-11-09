@@ -15,68 +15,74 @@ def connect_sql():
         charset="UTF8")
     return conn
 
-def gene_report(begin_time, end_time):
+def gene_report(begin_time, end_time, report):
     res = {}
-    #res.update(order_log(begin_time, end_time))
+    res.update(order_log(begin_time, end_time))
     res.update(order_report(begin_time, end_time))
-    #res.update(user_report(begin_time, end_time))
+    res.update(user_report(begin_time, end_time))
+    report.totle_order = res['totle_order_true']
+    report.totle_order_price = res['totle_amount']
+    report.totle_new_user = res['totle_user']
+    report.totle_order_tracery = res['tracery']
+    report.totle_order_clotheshorse = res['clotheshorse']
+    report.totle_order_bathroom = res['bathroom']
+    report.totle_order_doorsandwindows = res['doorsandwindows']
+    report.save()
+    try:
+        res['totle_order_true_compare'] = int((report.totle_order - report.ex_report.totle_order) * 100 / report.totle_order)
+        res['totle_amount_compare'] = int((report.totle_order_price - report.ex_report.totle_order_price) * 100 / report.totle_order_price)
+        res['totle_totle_user_compare'] = int((report.totle_new_user - report.ex_report.totle_new_user) * 100 / report.totle_new_user)
+        res['totle_order_tracery_compare'] = int((report.totle_order_tracery - report.ex_report.totle_order_tracery) * 100 / report.totle_order_tracery)
+        res['totle_order_clotheshorse_compare'] = int((report.totle_order_clotheshorse - report.ex_report.totle_order_clotheshorse) * 100 / report.totle_order_clotheshorse)
+        res['totle_order_bathroom_compare'] = int((report.totle_order_bathroom - report.ex_report.totle_order_bathroom) * 100 / report.totle_order_bathroom)
+        res['totle_order_doorsandwindows_compare'] = int((report.totle_order_doorsandwindows - report.ex_report.totle_order_doorsandwindows) * 100 / report.totle_order_doorsandwindows)
+    except:
+        #without ex report
+        pass
     return res
 
 def order_report(begin_time, end_time):
     conn = connect_sql()
-    sql_text = "SELECT o.id,o.state,o.amount,o.category,c.name"
+    sql_text = "SELECT o.id,o.state,o.amount,o.category,c.name,o.role"
     sql_text +=" FROM `zzplatform`.`t_order` as o "
     sql_text +="LEFT JOIN `zzplatform`.`t_md_city` as c on o.cityId = c.id "
     sql_text += "WHERE o.createTime>'%s' and o.createTime<'%s';" % (begin_time, end_time)
     try:
         df = pd.io.sql.read_sql(sql_text, con=conn)
-        #file_name = "log/order_%s.xls" % begin_time
-        #df.to_excel(file_name,index=None, na_rep='None')
+        file_name = "log/order_%s.xls" % begin_time
+        df.to_excel(file_name,index=None, na_rep='None')
     finally:
         conn.close()
 
     res = {}
     res["totle_order"] =   df['id'].count()
     res["totle_order_cancel"] =   df[df['state'].isin(['cancel'])].count()['id']
+    res['totle_order_true'] = res["totle_order"] - res["totle_order_cancel"]
     res["totle_amount"] =  df['amount'].sum() - df[df['state'].isin(['cancel'])]['amount'].sum()
-    res["tab_category"] = df.groupby(['category']).size()
-    #order by category order by city 
-    tab_tracery = df[df['category'].isin(['tracery'])]
-    tab_tracery = tab_tracery.groupby(['name']).count().sort_values(by=['id'], ascending=False)[:5]
-    res['tab_tracery'] = []
-    for i in range(0, len(tab_tracery)):
-        res['tab_tracery'].append({
-            'city' : tab_tracery.index[i],
-            'totle_order' : tab_tracery.ix[i]['id']
+    res["tab_category"] = df[~df['state'].isin(['cancel'])].groupby(['category']).size().sort_values(ascending=False)
+    res["tab_role"] = df.groupby(['role']).size()
+    #order by category order by city
+    res['tab_category_city'] = []
+    for i in range(0, len(res["tab_category"])):
+        temp_tab = df[df['category'].isin([res["tab_category"].index[i]])]
+        res[res["tab_category"].index[i]] = res["tab_category"][i]
+        res['tab_category_city'].append({
+            'category' : res["tab_category"].index[i],
+            'totle_order' : res["tab_category"][i],
+            "citys" : display_loop(temp_tab, groupby_name="name", number=5)[0]
         })
 
-    tab_bathroom = df[df['category'].isin(['bathroom'])]
-    tab_bathroom = tab_bathroom.groupby(['name']).count().sort_values(by=['id'], ascending=False)[:5]
-    res['tab_bathroom'] = []
-    for i in range(0, len(tab_bathroom)):
-        res['tab_bathroom'].append({
-            'city' : tab_bathroom.index[i],
-            'totle_order' : tab_bathroom.ix[i]['id']
+    #order by city order by category
+    res['tab_city_category'] = []
+    res["tab_city"] = df[~df['state'].isin(['cancel'])].groupby(['name']).size().sort_values(ascending=False)[:5]
+    for i in range(0, len(res["tab_city"])):
+        temp_tab = df[df['name'].isin([res["tab_city"].index[i]])]
+        res['tab_city_category'].append({
+            'city' : res["tab_city"].index[i],
+            'totle_order' : res["tab_city"][i],
+            "categorys" : display_loop(temp_tab, groupby_name="category")[0]
         })
-
-    tab_clotheshorse = df[df['category'].isin(['clotheshorse'])]
-    tab_clotheshorse = tab_clotheshorse.groupby(['name']).count().sort_values(by=['id'], ascending=False)[:5]
-    res['tab_clotheshorse'] = []
-    for i in range(0, len(tab_clotheshorse)):
-        res['tab_clotheshorse'].append({
-            'city' : tab_clotheshorse.index[i],
-            'totle_order' : tab_clotheshorse.ix[i]['id']
-        })
-
-    tab_doorsandwindows = df[df['category'].isin(['doorsandwindows'])]
-    tab_doorsandwindows = tab_doorsandwindows.groupby(['name']).count().sort_values(by=['id'], ascending=False)[:5]
-    res['tab_doorsandwindows'] = []
-    for i in range(0, len(tab_doorsandwindows)):
-        res['tab_doorsandwindows'].append({
-            'city' : tab_doorsandwindows.index[i],
-            'totle_order' : tab_doorsandwindows.ix[i]['id']
-        })
-
+   
     return res
 
 def user_report(begin_time, end_time):
@@ -97,17 +103,32 @@ def user_report(begin_time, end_time):
     #that is for user
     res = {}
     res["new_user"] = df_user['id'].count()
-    res["tab_user_role"] = df_user.groupby(['role']).size()
-    res["tab_user_source"] = df_user.groupby(['sourcePlatform']).size()
+    temp_user_role_tab = df_user.groupby(['role']).size().sort_values(ascending=False)
+    try:
+        res['totle_user'] = temp_user_role_tab['person']
+        res['tab_user_role'] = []
+        temp_sum = 0
+        for i in range(1, len(temp_user_role_tab)):
+            temp_sum = temp_sum+temp_user_role_tab[i]
+            res['tab_user_role'].append({
+                'role' : temp_user_role_tab.index[i],
+                'totle_user' : temp_user_role_tab[i],
+                "percent" : str(int(float(temp_user_role_tab[i])/res['totle_user']*100)) + '%'
+            })
+        res['tab_user_role'].append({
+                'role' : temp_user_role_tab.index[0],
+                'totle_user' : res['totle_user'] - temp_sum,
+                "percent" : str(int(float(res['totle_user'] - temp_sum)/res['totle_user']*100)) + '%'
+            })
+    except:
+        #without new person
+        res['totle_user'] = 0
+    temp_user_source = df_user.groupby(['sourcePlatform']).size()
+    temp_user_source_sum = df_user.groupby(['sourcePlatform']).sum()
+    res["tab_user_source"] = display_loop(df_user, groupby_name="sourcePlatform")[0]
     tab_user_worker = df_user[df_user['role'].isin(['worker'])]
     res['tab_worker_state'] = tab_user_worker.groupby(['state']).size()
-    tab_user_city = df_user.groupby(['name']).count().sort_values(by=['id'], ascending=False)[:5]
-    res['user_city'] = []
-    for i in range(0, len(tab_user_city)):
-        res['user_city'].append({
-            'city' : tab_user_city.index[i],
-            'totle_user' : tab_user_city.ix[i]['id']
-        })
+    res['user_city'] = display_loop(df_user, groupby_name="name", number=5)[0]
     return res
 
 def order_log(begin_time, end_time):
@@ -149,35 +170,37 @@ def order_log(begin_time, end_time):
             res[i]['state'] = arr[NEW]
             res[i]['sign_date'] = arr[CREATE]
             if type(arr[PLAN]) == type(arr[CREATE]):
-                res[i]['sign_rdv'] = (arr[CREATE] - arr[PLAN]).days
+                res[i]['sign_rdv'] = "%d天" % (arr[CREATE] - arr[PLAN]).days
         elif arr[NEW] == 'waitconfirm':
             i = item.index(arr[ORDER_ID])
             res[i]['state'] = arr[NEW]
-            res[i]['fini_sign'] = (arr[CREATE] - res[i]['sign_date']).days
+            res[i]['fini_sign'] = "%d天" % (arr[CREATE] - res[i]['sign_date']).days
 
     res_df = pd.DataFrame(res)
     file_name = "log/order_log_%s.csv" % begin_time
     res_df.to_csv(file_name,index=None, na_rep='None')
     res = {}
-    res['wait_day'] = []
-    res['sign_rdv'] = []
-    res['fini_sign'] = []
-    res_wait = res_df.groupby('wait').size()
-    res_sign_rdv = res_df.groupby('sign_rdv').size()
-    res_fini_sign = res_df.groupby('fini_sign').size()
-    for (key , value) in res_wait.iteritems():
-        res['wait_day'].append({
-            'day' : key,
-            'count' : value,
-            })
-    for (key , value) in res_sign_rdv.iteritems():
-        res['sign_rdv'].append({
-            'day' : key,
-            'count' : value,
-            })
-    for (key , value) in res_fini_sign.iteritems():
-        res['fini_sign'].append({
-            'day' : key,
-            'count' : value,
-            })
+    res['wait_day'] = display_loop(res_df, groupby_name='wait')[0]
+    res['sign_rdv'] = display_loop(res_df, groupby_name='sign_rdv')[0]
+    res['fini_sign'] = display_loop(res_df, groupby_name='fini_sign')[0]
     return res
+
+"""
+dic-big is the table,
+groupby_name is the categeory which you want to group,
+number which you want to show the number of row in the result
+"""
+def display_loop(dic_big, groupby_name, number=0):
+    res = []
+    dic_small = dic_big.groupby([groupby_name]).count().sort_values(by=['id'], ascending=False)
+    if number != 0:
+        dic_small = dic_small[:number]
+    temp_sum = dic_small['id'].sum()
+    for i in range(0, len(dic_small)):
+        res.append({
+            'name' : dic_small.index[i],
+            'totle' : dic_small.ix[i]['id'],
+            "percent" : str(dic_small.ix[i]['id']*100/temp_sum) + '%'
+        })
+    return res, temp_sum
+    

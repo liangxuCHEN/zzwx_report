@@ -2,40 +2,187 @@
 {% block title %}管理系统{% endblock %}
 {% block content %}
 <div class="jumbotron">
-<h3> {{report.end_time.isoformat}}报告结果：</h3>
-  <p>订单总量 : {{report.totle_order}}</p>
-  <p>取消订单总量 : {{report.totle_order_cancel}}</p>
-  <p> 待接单等待时间 : {% for item in report.wait_day %} {{item.day}}天 ({{item.count}}) | {%endfor%}</p>
-  <p> 签到时间与预约时间差 : {% for item in report.sign_rdv %} {{item.day}}天 ({{item.count}}) | {%endfor%}</p>
-  <p> 签到时间和完工时间差 : {% for item in report.fini_sign %} {{item.day}}天 ({{item.count}}) | {%endfor%}</p>
-  <p>订单总额 : {{report.totle_amount}}</p>
-   <p>窗饰订单量 : {{report.tab_category.tracery}}</p>
-   <p>
-   {% for order in report.tab_tracery %}
-    {{order.city}} ({{order.totle_order}}) |
-   {%endfor%}
-   </p>
-   <p>卫浴订单量 : {{report.tab_category.bathroom}}</p>
-   <p>
-   {% for order in report.tab_tracery %}
-    {{order.city}} ({{order.totle_order}}) |
-   {%endfor%}
-   </p>
-   <p>晾衣架订单量 : {{report.tab_category.clotheshorse}}</p>
-   <p>
-   {% for order in report.tab_tracery %}
-    {{order.city}} ({{order.totle_order}}) |
-   {%endfor%}
-   </p>
-   <p>门窗订单量 : {{report.tab_category.doorsandwindows}}</p>
-   <p>
-   {% for order in report.tab_tracery %}
-    {{order.city}} ({{order.totle_order}}) |
-   {%endfor%}
-   </p>
-   <hr>
-   <p>新增用户 : {{report.new_user}} (个人 : {{report.tab_user_role.person}} |商户:{{report.tab_user_role.merchant}} |电商:{{report.tab_user_role.eshop}} |师傅:{{report.tab_user_role.worker}})</p>
+<h2> {{report.end_time.isoformat}}报告结果：</h2>
+  <h3>订单数据</h3> 
+  <p>总订单量{{report.totle_order_true}}({{report.totle_order_true_compare}}%)（总下单量:{{report.totle_order}}，其中已取消{{report.totle_order_cancel}}单） </p>
+  <p>订单总额(排除取消订单) : {{report.totle_amount}} ({{report.totle_amount_compare}}%)</p>
+  <hr>
+  <h3> 订单流程的时间节点如下</h3>
+  <p> 待接单等待时间</p>
+   <table class="table">
+   <tbody>
+     <tr class="info">{% for item in report.wait_day %}
+       <td>{{item.name}}天</td>
+          {%endfor%}
+     </tr>
+      <tr>
+      {% for item in report.wait_day %}
+       <td>{{item.totle}}</td>
+          {%endfor%}
+      </tr>
+      <tr>
+      {% for item in report.wait_day %}
+       <td>{{item.percent}}</td>
+          {%endfor%}
+      </tr>
+    </tbody>
+    </table>
+  <p> 签到时间与预约时间差 </p>
+  <table class="table">
+   <tbody>
+     <tr class="info">
+      {% for item in report.sign_rdv %}
+       <td>{{item.name}}</td>
+          {%endfor%}
+     </tr>
+      <tr>
+      {% for item in report.sign_rdv %}
+       <td>{{item.totle}}</td>
+          {%endfor%}
+      </tr>
+      <tr>
+      {% for item in report.sign_rdv %}
+       <td>{{item.percent}}</td>
+          {%endfor%}
+      </tr>
+    </tbody>
+    </table>
+  <p> 签到时间和完工时间差</p>
+  <table class="table">
+   <tbody>
+     <tr class="info">
+     {% for item in report.fini_sign %}
+       <td>{{item.name}}</td>
+          {%endfor%}
+     </tr>
+      <tr>
+      {% for item in report.fini_sign %}
+       <td>{{item.totle}}</td>
+          {%endfor%}
+      </tr>
+      <tr>
+      {% for item in report.fini_sign %}
+       <td>{{item.percent}}</td>
+          {%endfor%}
+      </tr>
+    </tbody>
+    </table>
 
-   <p>新增用户来源 <br/>微信朋友: {{report.tab_user_source.wechatFriend}} |QQ朋友:{{report.tab_user_source.qqFriend}} |微信朋友圈:{{report.tab_user_source.wechatCircle}}</p>
+  <p>类目的订单量环比</p>
+  <table class="table">
+   <tbody>
+     <tr class="info">
+        <td>窗饰</td>
+         <td>晾衣架</td>
+         <td>卫浴</td>
+         <td>门窗</td>
+     </tr>
+      <tr>
+        <td>{{report.tracery}}({{report.totle_order_tracery_compare}}%)</td>
+        <td>{{report.clotheshorse}}({{report.totle_order_clotheshorse_compare}}%)</td>
+        <td>{{report.bathroom}}({{report.totle_order_bathroom_compare}}%)</td>
+        <td>{{report.doorsandwindows}}({{report.totle_order_doorsandwindows_compare}}%)</td>
+      </tr>
+    </tbody>
+    </table>
+  <p>各类目的订单量，以及前５城市分布</p>
+  <table class="table table-hover">
+     <tbody>
+    {% for item in report.tab_category_city %}
+    <tr class="info">
+        <td>{{item.category}}</td>
+        {% for order in item.citys %}
+        <td> {{order.name}}</td>
+        {%endfor%}
+    </tr>
+    <tr class="warning">
+       <td>{{item.totle_order}}</td>
+       {% for order in item.citys %}
+       <td> {{order.totle}}</td>
+       {%endfor%}
+    </tr>
+    {%endfor%}
+  </table>
+    <p>TOP5城市的订单量，以及类目分布</p>
+    <table class="table table-hover">
+     <tbody>
+        {% for item in report.tab_city_category %}
+        <tr class="info">
+            <td>{{item.city}}</td>
+            {% for order in item.categorys %}
+            <td> {{order.name}}</td>
+            {%endfor%}
+        </tr>
+        <tr class="warning">
+           <td>{{item.totle_order}}</td>
+           {% for order in item.categorys %}
+           <td> {{order.totle}}</td>
+           {%endfor%}
+        </tr>
+        {%endfor%}
+      </tbody>
+  </table>
+<hr>
+   <h3>用户数据</h3> 
+   <table class="table">
+   <thead><tr class="warning"><td colspan="5">注册用户角色分布</td></tr></thead>
+   <tbody>
+     <tr class="info"><td>新增用户</td>
+       {% for item in report.tab_user_role %}
+       <td>{{item.role}}</td>
+          {%endfor%}
+     </tr>
+      <tr><td>{{report.totle_user}}({{report.totle_totle_user_compare}}%)</td>
+      {% for item in report.tab_user_role %}
+       <td>{{item.totle_user}}</td>
+          {%endfor%}
+      </tr>
+      <tr><td></td>
+      {% for item in report.tab_user_role %}
+       <td>{{item.percent}}</td>
+          {%endfor%}
+      </tr>
+    </tbody>
+    </table>
+   <table class="table">
+   <thead><tr class="warning"><td colspan="3">新增师傅来源(邀请分享活动)</td></tr></thead>
+   <tbody>
+     <tr class="info">
+       {% for item in report.tab_user_source %}
+            <td> {{item.name}}</td>
+            {%endfor%}
+      </tr>
+      <tr>
+         {% for item in report.tab_user_source %}
+            <td> {{item.totle}}</td>
+            {%endfor%}
+      </tr>
+      <tr>
+         {% for item in report.tab_user_source %}
+            <td> {{item.percent}}</td>
+            {%endfor%}
+      </tr>
+    </tbody>
+    </table>  
+    <table class="table">
+   <thead><tr class="warning"><td colspan="5">TOP5城市新增师傅</td></tr></thead>
+   <tbody>
+     <tr class="info">
+       {% for item in report.user_city %}
+            <td> {{item.name}}</td>
+            {%endfor%}
+      </tr>
+      <tr>
+         {% for item in report.user_city %}
+            <td> {{item.totle}}</td>
+            {%endfor%}
+      </tr>
+      <tr>
+         {% for item in report.user_city %}
+            <td> {{item.percent}}</td>
+            {%endfor%}
+      </tr>
+    </tbody>
+   </table>
   </div>
 {% endblock %}
