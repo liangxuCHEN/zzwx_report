@@ -21,5 +21,5 @@ def report_detail(request, report_id):
     msg_txt = render(request, 'report_detail.html', content)
     mail_to = 'liangxu.chen@livingdiy.com'
     subject = report.name
-    send_mail(mail_to, subject, msg_txt.content)
+    #send_mail(mail_to, subject, msg_txt.content)
     return msg_txt

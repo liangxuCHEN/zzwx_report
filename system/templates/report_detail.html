@@ -12,7 +12,7 @@
    <table class="table">
    <tbody>
      <tr class="info">{% for item in report.wait_day %}
-       <td>{{item.name}}天</td>
+       <td>{{item.name}}</td>
           {%endfor%}
      </tr>
       <tr>
@@ -124,65 +124,91 @@
   </table>
 <hr>
    <h3>用户数据</h3> 
-   <table class="table">
-   <thead><tr class="warning"><td colspan="5">注册用户角色分布</td></tr></thead>
-   <tbody>
-     <tr class="info"><td>新增用户</td>
-       {% for item in report.tab_user_role %}
-       <td>{{item.role}}</td>
-          {%endfor%}
-     </tr>
-      <tr><td>{{report.totle_user}}({{report.totle_totle_user_compare}}%)</td>
-      {% for item in report.tab_user_role %}
-       <td>{{item.totle_user}}</td>
-          {%endfor%}
-      </tr>
-      <tr><td></td>
-      {% for item in report.tab_user_role %}
-       <td>{{item.percent}}</td>
-          {%endfor%}
-      </tr>
-    </tbody>
-    </table>
-   <table class="table">
-   <thead><tr class="warning"><td colspan="3">新增师傅来源(邀请分享活动)</td></tr></thead>
-   <tbody>
-     <tr class="info">
-       {% for item in report.tab_user_source %}
-            <td> {{item.name}}</td>
+     <table class="table">
+     <thead><tr class="warning"><td colspan="5">注册用户角色分布</td></tr></thead>
+     <tbody>
+       <tr class="info"><td>新增用户</td>
+         {% for item in report.tab_user_role %}
+         <td>{{item.role}}</td>
             {%endfor%}
-      </tr>
-      <tr>
-         {% for item in report.tab_user_source %}
-            <td> {{item.totle}}</td>
+       </tr>
+        <tr><td>{{report.totle_user}}({{report.totle_totle_user_compare}}%)</td>
+        {% for item in report.tab_user_role %}
+         <td>{{item.totle_user}}</td>
             {%endfor%}
-      </tr>
-      <tr>
-         {% for item in report.tab_user_source %}
-            <td> {{item.percent}}</td>
+        </tr>
+        <tr><td></td>
+        {% for item in report.tab_user_role %}
+         <td>{{item.percent}}</td>
             {%endfor%}
-      </tr>
-    </tbody>
-    </table>  
-    <table class="table">
-   <thead><tr class="warning"><td colspan="5">TOP5城市新增师傅</td></tr></thead>
-   <tbody>
-     <tr class="info">
-       {% for item in report.user_city %}
-            <td> {{item.name}}</td>
-            {%endfor%}
-      </tr>
-      <tr>
+        </tr>
+      </tbody>
+      </table>
+
+       <table class="table">
+       <thead><tr class="warning"><td colspan="3">新增师傅来源(邀请分享活动)</td></tr></thead>
+       <tbody>
+         <tr class="info">
+           {% for item in report.tab_user_source %}
+                <td> {{item.name}}</td>
+                {%endfor%}
+          </tr>
+          <tr>
+             {% for item in report.tab_user_source %}
+                <td> {{item.totle}}</td>
+                {%endfor%}
+          </tr>
+          <tr>
+             {% for item in report.tab_user_source %}
+                <td> {{item.percent}}</td>
+                {%endfor%}
+          </tr>
+        </tbody>
+        </table>  
+
+      <table class="table">
+     <thead><tr class="warning"><td colspan="5">TOP5城市新增师傅</td></tr></thead>
+     <tbody>
+       <tr class="info">
          {% for item in report.user_city %}
-            <td> {{item.totle}}</td>
-            {%endfor%}
-      </tr>
-      <tr>
-         {% for item in report.user_city %}
-            <td> {{item.percent}}</td>
-            {%endfor%}
-      </tr>
-    </tbody>
-   </table>
+              <td> {{item.name}}</td>
+              {%endfor%}
+        </tr>
+        <tr>
+           {% for item in report.user_city %}
+              <td> {{item.totle}}</td>
+              {%endfor%}
+        </tr>
+        <tr>
+           {% for item in report.user_city %}
+              <td> {{item.percent}}</td>
+              {%endfor%}
+        </tr>
+      </tbody>
+     </table>
+    
+    <p>师傅提现总额{{report.draw_cash_sum}}</p>
+     <table class="table">
+     <thead><tr class="warning"><td colspan="5">师傅使用银行TOP5</td></tr></thead>
+     <tbody>
+       <tr class="info">
+         {% for item in report.worker_bank %}
+              <td> {{item.name}}</td>
+              {%endfor%}
+        </tr>
+        <tr>
+           {% for item in report.worker_bank %}
+              <td> {{item.totle}}</td>
+              {%endfor%}
+        </tr>
+        <tr>
+           {% for item in report.worker_bank %}
+              <td> {{item.percent}}</td>
+              {%endfor%}
+        </tr>
+      </tbody>
+     </table>
+
+
   </div>
 {% endblock %}

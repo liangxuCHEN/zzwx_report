@@ -17,18 +17,20 @@ def connect_sql():
 
 def gene_report(begin_time, end_time, report):
     res = {}
-    res.update(order_log(begin_time, end_time))
-    res.update(order_report(begin_time, end_time))
-    res.update(user_report(begin_time, end_time))
-    report.totle_order = res['totle_order_true']
-    report.totle_order_price = res['totle_amount']
-    report.totle_new_user = res['totle_user']
-    report.totle_order_tracery = res['tracery']
-    report.totle_order_clotheshorse = res['clotheshorse']
-    report.totle_order_bathroom = res['bathroom']
-    report.totle_order_doorsandwindows = res['doorsandwindows']
-    report.save()
+    #res.update(order_log(begin_time, end_time))
+    #res.update(order_report(begin_time, end_time))
+    #res.update(user_report(begin_time, end_time))
+    res.update(draw_cash_report(begin_time, end_time))
+    
     try:
+        report.totle_order = res['totle_order_true']
+        report.totle_order_price = res['totle_amount']
+        report.totle_new_user = res['totle_user']
+        report.totle_order_tracery = res['tracery']
+        report.totle_order_clotheshorse = res['clotheshorse']
+        report.totle_order_bathroom = res['bathroom']
+        report.totle_order_doorsandwindows = res['doorsandwindows']
+        report.save()
         res['totle_order_true_compare'] = int((report.totle_order - report.ex_report.totle_order) * 100 / report.totle_order)
         res['totle_amount_compare'] = int((report.totle_order_price - report.ex_report.totle_order_price) * 100 / report.totle_order_price)
         res['totle_totle_user_compare'] = int((report.totle_new_user - report.ex_report.totle_new_user) * 100 / report.totle_new_user)
@@ -64,7 +66,8 @@ def order_report(begin_time, end_time):
     #order by category order by city
     res['tab_category_city'] = []
     for i in range(0, len(res["tab_category"])):
-        temp_tab = df[df['category'].isin([res["tab_category"].index[i]])]
+        temp_tab = df[~df['state'].isin(['cancel'])]
+        temp_tab = temp_tab[temp_tab['category'].isin([res["tab_category"].index[i]])]
         res[res["tab_category"].index[i]] = res["tab_category"][i]
         res['tab_category_city'].append({
             'category' : res["tab_category"].index[i],
@@ -76,7 +79,8 @@ def order_report(begin_time, end_time):
     res['tab_city_category'] = []
     res["tab_city"] = df[~df['state'].isin(['cancel'])].groupby(['name']).size().sort_values(ascending=False)[:5]
     for i in range(0, len(res["tab_city"])):
-        temp_tab = df[df['name'].isin([res["tab_city"].index[i]])]
+        temp_tab = df[~df['state'].isin(['cancel'])]
+        temp_tab = temp_tab[temp_tab['name'].isin([res["tab_city"].index[i]])]
         res['tab_city_category'].append({
             'city' : res["tab_city"].index[i],
             'totle_order' : res["tab_city"][i],
@@ -163,7 +167,7 @@ def order_log(begin_time, end_time):
                 })
         elif arr[NEW] =='running':
             i = item.index(arr[ORDER_ID])
-            res[i]['wait'] =  (arr[CREATE] - res[i]['w_date']).days
+            res[i]['wait'] =  "%d天" % (arr[CREATE] - res[i]['w_date']).days
             res[i]['state'] = arr[NEW]
         elif arr[NEW] == 'sign':
             i = item.index(arr[ORDER_ID])
@@ -184,6 +188,22 @@ def order_log(begin_time, end_time):
     res['sign_rdv'] = display_loop(res_df, groupby_name='sign_rdv')[0]
     res['fini_sign'] = display_loop(res_df, groupby_name='fini_sign')[0]
     return res
+
+def draw_cash_report(begin_time, end_time):
+    conn = connect_sql()
+    sql_text = "SELECT id,bankname,accountname,amount,cityname "
+    sql_text +="FROM `zzplatform`.`t_user_drawcash` "
+    sql_text += "WHERE createdate>'%s' and createdate<'%s' " % (begin_time, end_time)
+    sql_text +="and loan='debit' and role='worker' and type='drawcash'; "
+    try:
+        df = pd.io.sql.read_sql(sql_text, con=conn)
+    finally:
+        conn.close()
+    res = {}
+    res['draw_cash_sum'] =  df['amount'].sum()
+    res['worker_bank'] = display_loop(df, groupby_name='bankname', number=5)[0]
+    return res  
+    
 
 """
 dic-big is the table,
