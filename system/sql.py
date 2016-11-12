@@ -17,19 +17,20 @@ def connect_sql():
 
 def gene_report(begin_time, end_time, report):
     res = {}
+    res['end_time'] =  end_time
     #res.update(order_log(begin_time, end_time))
-    #res.update(order_report(begin_time, end_time))
+    res.update(order_report(begin_time, end_time, report.report_type))
     #res.update(user_report(begin_time, end_time))
-    res.update(draw_cash_report(begin_time, end_time))
+    #res.update(draw_cash_report(begin_time, end_time))
     
     try:
         report.totle_order = res['totle_order_true']
         report.totle_order_price = res['totle_amount']
         report.totle_new_user = res['totle_user']
-        report.totle_order_tracery = res['tracery']
-        report.totle_order_clotheshorse = res['clotheshorse']
-        report.totle_order_bathroom = res['bathroom']
-        report.totle_order_doorsandwindows = res['doorsandwindows']
+        report.totle_order_tracery = res['tracery']['totle_order']
+        report.totle_order_clotheshorse = res['clotheshorse']['totle_order']
+        report.totle_order_bathroom = res['bathroom']['totle_order']
+        report.totle_order_doorsandwindows = res['doorsandwindows']['totle_order']
         report.save()
         res['totle_order_true_compare'] = int((report.totle_order - report.ex_report.totle_order) * 100 / report.totle_order)
         res['totle_amount_compare'] = int((report.totle_order_price - report.ex_report.totle_order_price) * 100 / report.totle_order_price)
@@ -43,9 +44,9 @@ def gene_report(begin_time, end_time, report):
         pass
     return res
 
-def order_report(begin_time, end_time):
+def order_report(begin_time, end_time, report_type):
     conn = connect_sql()
-    sql_text = "SELECT o.id,o.state,o.amount,o.category,c.name,o.role"
+    sql_text = "SELECT o.id,o.state,o.amount,o.category,c.name,o.role,o.createTime"
     sql_text +=" FROM `zzplatform`.`t_order` as o "
     sql_text +="LEFT JOIN `zzplatform`.`t_md_city` as c on o.cityId = c.id "
     sql_text += "WHERE o.createTime>'%s' and o.createTime<'%s';" % (begin_time, end_time)
@@ -58,35 +59,63 @@ def order_report(begin_time, end_time):
 
     res = {}
     res["totle_order"] =   df['id'].count()
-    res["totle_order_cancel"] =   df[df['state'].isin(['cancel'])].count()['id']
-    res['totle_order_true'] = res["totle_order"] - res["totle_order_cancel"]
-    res["totle_amount"] =  df['amount'].sum() - df[df['state'].isin(['cancel'])]['amount'].sum()
-    res["tab_category"] = df[~df['state'].isin(['cancel'])].groupby(['category']).size().sort_values(ascending=False)
+
+    if report_type == 'W':
+        res['report_type'] = u'周报告'
+        order_state_filter = ['cancel']
+    elif report_type == 'M':
+        res['report_type'] = u'月报告'
+        order_state_filter = ['cancel', 'none', 'securitydays','waitconfirm']
+    elif report_type == 'Y':
+        res['report_type'] = u'年报告'
+        order_state_filter = ['cancel', 'none', 'securitydays','waitconfirm','securitydays']
+
+    #filter the true order
+    df = df[~df['state'].isin(order_state_filter)]
+    res['totle_order_true'] =df['id'].count()
+    res["totle_order_cancel"] = res["totle_order"] - res["totle_order_true"]
+    res["totle_amount"] =  df['amount'].sum()
+    res["tab_category"] = df.groupby(['category']).size().sort_values(ascending=False)
     res["tab_role"] = df.groupby(['role']).size()
     #order by category order by city
     res['tab_category_city'] = []
     for i in range(0, len(res["tab_category"])):
-        temp_tab = df[~df['state'].isin(['cancel'])]
-        temp_tab = temp_tab[temp_tab['category'].isin([res["tab_category"].index[i]])]
-        res[res["tab_category"].index[i]] = res["tab_category"][i]
+        #chose the order by category
+        temp_tab = df[df['category'].isin([res["tab_category"].index[i]])]
+        #only for compaire the pre_week/month report 
+        category_name = res["tab_category"].index[i]
+        res[category_name] ={
+            'totle_order' : res["tab_category"][i],
+            'totle_amount' : temp_tab['amount'].sum(),
+        }
         res['tab_category_city'].append({
             'category' : res["tab_category"].index[i],
             'totle_order' : res["tab_category"][i],
+            'totle_amount' : res[category_name]['totle_amount'],
+            'price_pre_order': int(res[category_name]['totle_amount']/res["tab_category"][i]),
             "citys" : display_loop(temp_tab, groupby_name="name", number=5)[0]
         })
 
     #order by city order by category
     res['tab_city_category'] = []
-    res["tab_city"] = df[~df['state'].isin(['cancel'])].groupby(['name']).size().sort_values(ascending=False)[:5]
+    res["tab_city"] = df.groupby(['name']).size().sort_values(ascending=False)[:5]
     for i in range(0, len(res["tab_city"])):
-        temp_tab = df[~df['state'].isin(['cancel'])]
-        temp_tab = temp_tab[temp_tab['name'].isin([res["tab_city"].index[i]])]
+        temp_tab = df[df['name'].isin([res["tab_city"].index[i]])]
+        temp_amount = temp_tab['amount'].sum(),
         res['tab_city_category'].append({
             'city' : res["tab_city"].index[i],
             'totle_order' : res["tab_city"][i],
+            'totle_amount' : temp_amount,
+            'price_pre_order' : int(temp_amount/res["tab_city"][i]),
             "categorys" : display_loop(temp_tab, groupby_name="category")[0]
         })
-   
+
+    #order createTime is which weekday
+    res['weekdays'] = [0]*7
+    for item in df['createTime']:
+        i = item.weekday()
+        res['weekdays'][i] = res['weekdays'][i]+1
+
     return res
 
 def user_report(begin_time, end_time):

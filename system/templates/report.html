@@ -2,14 +2,52 @@
 {% block title %}管理系统{% endblock %}
 {% block content %}
 <div class="jumbotron">
+
 {% if reports %}
+<table class="table">
+  <thead>
+    <tr>
       <form role="from" method="get" class="form-horizontal" action="/report"  >
-       <input type="submit" value="搜索" class="btn btn-primary"/>
-       <input type="date" name="date" placeholder="日期" />
+      <td><input type="submit" value="搜索" class="btn btn-primary"/></td>
+      <td colspan="2"><input type="date" name="date"/></td>
+      <td><select name='report_type'>
+      	<option value ="W">周报告</option>
+      	<option value ="M">月报告</option>
+      	<option value ="Y">年报告</option>	
+           </select></td>
       </form>
-  {% for report in reports %}
-        <p><a href="{% url 'report_detail' report.id %}">{{report.name}}</a>  | {{report.begin_time.isoformat}}:{{report.end_time.isoformat}}</p>
-  {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+      {% for report in reports %}
+      <tr>
+        <td><a href="{% url 'report_detail' report.id %}">{{report.name}}</a></td> 
+         <td>{{report.begin_time.isoformat}}</td>
+         <td>{{report.end_time.isoformat}}</td>
+         <td>{{report.report_type}}</td>
+      {% endfor %}
+   </tbody>
+  </table>
   {%endif%}
+    <div class="pull-right">
+      <ul class="pagination">
+            {% if reports.has_previous %}
+                <li><a href="?page={{ reports.previous_page_number }}">prev</a></li>
+            {% endif %}
+            <script type="text/javascript">
+            for (var i=1;i<={{ reports.paginator.num_pages }};i++)
+            {
+             if (i == {{ reports.number }}) {
+                document.write("<li class='active'> <a href='?page=" + i + "'>" + i + "</a></li>");
+             } else {
+              document.write("<li> <a href='?page=" + i + "'>" + i + "</a></li>");
+             }
+            }
+            </script>
+            {% if reports.has_next %}
+               <li> <a href="?page={{ reports.next_page_number }}">next</a></li>
+            {% endif %}
+      </ul>
+  </div>
 </div>
 {% endblock %}

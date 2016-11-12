@@ -2,10 +2,10 @@
 {% block title %}管理系统{% endblock %}
 {% block content %}
 <div class="jumbotron">
-<h2> {{report.end_time.isoformat}}报告结果：</h2>
+<h2> {{report.end_time.isoformat}}{{report.report_type}}结果：</h2>
   <h3>订单数据</h3> 
   <p>总订单量{{report.totle_order_true}}({{report.totle_order_true_compare}}%)（总下单量:{{report.totle_order}}，其中已取消{{report.totle_order_cancel}}单） </p>
-  <p>订单总额(排除取消订单) : {{report.totle_amount}} ({{report.totle_amount_compare}}%)</p>
+  <p>订单总额(排除取消订单) : {{report.totle_amount}} ({{report.totle_amount_compare}}%)元</p>
   <hr>
   <h3> 订单流程的时间节点如下</h3>
   <p> 待接单等待时间</p>
@@ -78,10 +78,16 @@
          <td>门窗</td>
      </tr>
       <tr>
-        <td>{{report.tracery}}({{report.totle_order_tracery_compare}}%)</td>
-        <td>{{report.clotheshorse}}({{report.totle_order_clotheshorse_compare}}%)</td>
-        <td>{{report.bathroom}}({{report.totle_order_bathroom_compare}}%)</td>
-        <td>{{report.doorsandwindows}}({{report.totle_order_doorsandwindows_compare}}%)</td>
+        <td>{{report.tracery.totle_order}}({{report.totle_order_tracery_compare}}%)</td>
+        <td>{{report.clotheshorse.totle_order}}({{report.totle_order_clotheshorse_compare}}%)</td>
+        <td>{{report.bathroom.totle_order}}({{report.totle_order_bathroom_compare}}%)</td>
+        <td>{{report.doorsandwindows.totle_order}}({{report.totle_order_doorsandwindows_compare}}%)</td>
+      </tr>
+      <tr>
+        <td>{{ report.tracery.totle_amount}} {{report.tracery.totle_order }}</td>
+        <td>{{report.clotheshorse.totle_amount}}</td>
+        <td>{{report.bathroom.totle_amount}}</td>
+        <td>{{report.doorsandwindows.totle_amount}}</td>
       </tr>
     </tbody>
     </table>
@@ -96,7 +102,7 @@
         {%endfor%}
     </tr>
     <tr class="warning">
-       <td>{{item.totle_order}}</td>
+       <td>{{item.totle_order}} <br/>平均客单价 : {{item.price_pre_order}}</td>
        {% for order in item.citys %}
        <td> {{order.totle}}</td>
        {%endfor%}
@@ -114,7 +120,7 @@
             {%endfor%}
         </tr>
         <tr class="warning">
-           <td>{{item.totle_order}}</td>
+           <td>{{item.totle_order}}<br/>平均客单价 : {{item.price_pre_order}}</td>
            {% for order in item.categorys %}
            <td> {{order.totle}}</td>
            {%endfor%}
@@ -122,6 +128,21 @@
         {%endfor%}
       </tbody>
   </table>
+<p>订单下单日期分布</p>
+<table class="table">
+  <thead>
+    <tr class="info"><td>星期一</td><td>星期二</td><td>星期三</td><td>星期四</td><td>星期五</td><td>星期六</td><td>星期日</td></tr>
+  </thead>
+ <tbody>
+   <tr>
+      {% for item in report.weekdays %}
+           <td> {{item}}</td>
+      {%endfor%}
+   </tr>
+ </tbody>
+</table>
+
+
 <hr>
    <h3>用户数据</h3> 
      <table class="table">
@@ -187,7 +208,7 @@
       </tbody>
      </table>
     
-    <p>师傅提现总额{{report.draw_cash_sum}}</p>
+    <p>师傅提现总额 : {{report.draw_cash_sum}}元</p>
      <table class="table">
      <thead><tr class="warning"><td colspan="5">师傅使用银行TOP5</td></tr></thead>
      <tbody>
