@@ -18,10 +18,11 @@ def connect_sql():
 def gene_report(begin_time, end_time, report):
     res = {}
     res['end_time'] =  end_time
-    #res.update(order_log(begin_time, end_time))
+    res.update(worker_auditing(begin_time, end_time))
+    res.update(order_log(begin_time, end_time))
     res.update(order_report(begin_time, end_time, report.report_type))
-    #res.update(user_report(begin_time, end_time))
-    #res.update(draw_cash_report(begin_time, end_time))
+    res.update(user_report(begin_time, end_time))
+    res.update(draw_cash_report(begin_time, end_time))
     
     try:
         report.totle_order = res['totle_order_true']
@@ -232,7 +233,28 @@ def draw_cash_report(begin_time, end_time):
     res['draw_cash_sum'] =  df['amount'].sum()
     res['worker_bank'] = display_loop(df, groupby_name='bankname', number=5)[0]
     return res  
-    
+
+def worker_auditing(begin_time, end_time):
+    conn = connect_sql()
+    sql_text = "SELECT count(createdate),userid,createdate,state FROM `zzplatform`.`t_user_data` "
+    sql_text +="WHERE createdate>'%s' and createdate<'%s' " % (begin_time, end_time)
+    sql_text += "GROUP BY createdate;"
+    print sql_text
+    try:
+        df = pd.io.sql.read_sql(sql_text, con=conn)
+    finally:
+        conn.close() 
+   
+    res = {}
+    totle = 0
+    for num in df['count(createdate)']:
+        totle =  1 + totle
+    res['auditing_num'] = totle
+    if totle ==0:
+        res['auditing_disabled'] = 0
+    else:
+        res['auditing_disabled'] = df.groupby('state').size()[0]
+    return res
 
 """
 dic-big is the table,
