@@ -128,6 +128,25 @@
         {%endfor%}
       </tbody>
   </table>
+
+<p>订单日复购率如下，周复购率为：{{report.totle_rebuy_rate}}%</p>
+<table class="table">
+  <thead>
+    <tr class="info">
+      {%for item in report.day_rebuy %}
+          <td>{{item.date}}</td>
+      {%endfor%}
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      {%for item in report.day_rebuy %}
+        <td>{{item.rebuy_rate}}%</td>
+      {%endfor%}
+    </tr>
+  </tbody>
+</table>
+
 <p>订单下单日期分布</p>
 <table class="table">
   <thead>
