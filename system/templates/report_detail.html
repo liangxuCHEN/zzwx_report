@@ -84,10 +84,10 @@
         <td>{{report.doorsandwindows.totle_order}}({{report.totle_order_doorsandwindows_compare}}%)</td>
       </tr>
       <tr>
-        <td>{{ report.tracery.totle_amount}} {{report.tracery.totle_order }}</td>
-        <td>{{report.clotheshorse.totle_amount}}</td>
-        <td>{{report.bathroom.totle_amount}}</td>
-        <td>{{report.doorsandwindows.totle_amount}}</td>
+        <td>{{ report.tracery.totle_amount}}元</td>
+        <td>{{report.clotheshorse.totle_amount}}元</td>
+        <td>{{report.bathroom.totle_amount}}元</td>
+        <td>{{report.doorsandwindows.totle_amount}}元</td>
       </tr>
     </tbody>
     </table>
@@ -102,7 +102,7 @@
         {%endfor%}
     </tr>
     <tr class="warning">
-       <td>{{item.totle_order}} <br/>平均客单价 : {{item.price_pre_order}}</td>
+       <td>{{item.totle_order}} <br/>平均客单价 : {{item.price_pre_order}}元</td>
        {% for order in item.citys %}
        <td> {{order.totle}}</td>
        {%endfor%}
@@ -120,7 +120,7 @@
             {%endfor%}
         </tr>
         <tr class="warning">
-           <td>{{item.totle_order}}<br/>平均客单价 : {{item.price_pre_order}}</td>
+           <td>{{item.totle_order}}<br/>平均客单价 : {{item.price_pre_order}}元</td>
            {% for order in item.categorys %}
            <td> {{order.totle}}</td>
            {%endfor%}

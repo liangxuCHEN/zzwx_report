@@ -18,11 +18,11 @@ def connect_sql():
 def gene_report(begin_time, end_time, report):
     res = {}
     res['end_time'] =  end_time
-    #res.update(worker_auditing(begin_time, end_time))
-    #res.update(order_log(begin_time, end_time))
+    res.update(worker_auditing(begin_time, end_time))
+    res.update(order_log(begin_time, end_time))
     res.update(order_report(begin_time, end_time, report.report_type))
-    #res.update(user_report(begin_time, end_time))
-    #res.update(draw_cash_report(begin_time, end_time))
+    res.update(user_report(begin_time, end_time))
+    res.update(draw_cash_report(begin_time, end_time))
     
     try:
         report.totle_order = res['totle_order_true']
@@ -72,7 +72,7 @@ def order_report(begin_time, end_time, report_type):
         order_state_filter = ['cancel', 'none', 'securitydays','waitconfirm','securitydays']
 
     #filter the true order
-    df = df[~df['state'].isin(order_state_filter)]
+    df = df[~df['state'].isin(order_state_filter)].sort_values('createTime', ascending=False)
     res['totle_order_true'] =df['id'].count()
     res["totle_order_cancel"] = res["totle_order"] - res["totle_order_true"]
     res["totle_amount"] =  df['amount'].sum()
@@ -117,13 +117,14 @@ def order_report(begin_time, end_time, report_type):
         i = item.weekday()
         res['weekdays'][i] = res['weekdays'][i]+1
 
-    #re buy rate
-    df_merchant = df[~df['role'].isin(['person'])].sort_values('createTime', ascending=False)
+    #rebuy rate
+    df_merchant = df[~df['role'].isin(['person'])]
     #the colome place
     MERCHANT = 7
     ESHOP= 8
     CREATE = 6
-    merchant_list = []
+    day_merchant_list = []
+    month_merchant_list = []
     merchant_detail = {}
     now = datetime.datetime.combine(begin_time, datetime.time(8,10,10))
     day_merchant = []
@@ -132,21 +133,22 @@ def order_report(begin_time, end_time, report_type):
     for arr in df.values:
         if (arr[CREATE].day - now.day) == 0:
             if arr[MERCHANT] == u'宅无限':
-                if arr[ESHOP] not in merchant_list:
+                if arr[ESHOP] not in day_merchant_list:
                     day_merchant.append(arr[ESHOP])
-                    merchant_list.append(arr[ESHOP])
+                    day_merchant_list.append(arr[ESHOP])
                     merchant_detail[arr[ESHOP]] = {
                         'day' : arr[CREATE],
                         'month_rebuy' : False,
                     }
                 else:
                     day_rebuy_merchant.append(arr[ESHOP])
-                    if (arr[CREATE].day - merchant_detail[arr[ESHOP]]['day'].day) > 0 :
-                            merchant_detail[arr[ESHOP]]['month_rebuy'] =  True
+ 
+                if arr[ESHOP] in month_merchant_list:
+                        merchant_detail[arr[ESHOP]]['month_rebuy'] =  True
             else:
-                if arr[MERCHANT] not in merchant_list:
+                if arr[MERCHANT] not in day_merchant_list:
                     day_merchant.append(arr[MERCHANT])
-                    merchant_list.append(arr[MERCHANT])
+                    day_merchant_list.append(arr[MERCHANT])
                     merchant_detail[arr[MERCHANT]] = {
                         "day":arr[CREATE],
                         'month_rebuy': False,
@@ -155,13 +157,18 @@ def order_report(begin_time, end_time, report_type):
                     day_rebuy_merchant.append(arr[MERCHANT])
                     if (arr[CREATE].day - merchant_detail[arr[MERCHANT]]['day'].day) > 0 :
                         merchant_detail[arr[MERCHANT]]['month_rebuy'] =  True
+
+                if arr[MERCHANT] in month_merchant_list:
+                        merchant_detail[arr[MERCHANT]]['month_rebuy'] =  True
         else:
             res['day_rebuy'].append({
                 'date' : str(now.date()),
                 'rebuy_rate' : len(set(day_rebuy_merchant))*100/len(day_merchant) if len(day_merchant)>0 else 0,
             })
+            month_merchant_list =  list(set(month_merchant_list+day_merchant_list))
             day_merchant = []
             day_rebuy_merchant = []
+            day_merchant_list = []
             now = arr[CREATE]
 
     res['day_rebuy'].append({
@@ -172,7 +179,7 @@ def order_report(begin_time, end_time, report_type):
     for item in merchant_detail:
         if merchant_detail[item]['month_rebuy']:
             tmp_totle = tmp_totle + 1
-    res['totle_rebuy_rate'] =tmp_totle*100/len(set(merchant_list)) if len(merchant_list)>0 else 0
+    res['totle_rebuy_rate'] =tmp_totle*100/len(set(month_merchant_list)) if len(month_merchant_list)>0 else 0
     return res
 
 def user_report(begin_time, end_time):
@@ -295,7 +302,6 @@ def worker_auditing(begin_time, end_time):
     sql_text = "SELECT count(createdate),userid,createdate,state FROM `zzplatform`.`t_user_data` "
     sql_text +="WHERE createdate>'%s' and createdate<'%s' " % (begin_time, end_time)
     sql_text += "GROUP BY createdate;"
-    print sql_text
     try:
         df = pd.io.sql.read_sql(sql_text, con=conn)
     finally:
